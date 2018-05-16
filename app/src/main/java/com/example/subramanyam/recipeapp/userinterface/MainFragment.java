@@ -28,8 +28,7 @@ import static com.example.subramanyam.recipeapp.userinterface.RecipeItemActivity
 
 public class MainFragment extends Fragment {
 
-    public MainFragment()
-    {
+    public MainFragment() {
 
     }
 
@@ -38,27 +37,23 @@ public class MainFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         RecyclerView recyclerView;
-        View view= inflater.inflate(R.layout.fragment_main, container, false);
+        View view = inflater.inflate(R.layout.fragment_main, container, false);
 
 
+        recyclerView = view.findViewById(R.id.recipe_recycler);
 
-
-        recyclerView= view.findViewById(R.id.recipe_recycler);
-
-        RecipeName recipesAdapter =new RecipeName((RecipeItemActivity)getActivity());
+        RecipeName recipesAdapter = new RecipeName((RecipeItemActivity) getActivity());
 
         recyclerView.setAdapter(recipesAdapter);
 
 
-        if (view.getTag()!=null && view.getTag().equals("phone-land")){
+        if (view.getTag() != null && view.getTag().equals("phone-land")) {
 
-            GridLayoutManager mLayoutManager = new GridLayoutManager(getContext(),4);
+            GridLayoutManager mLayoutManager = new GridLayoutManager(getContext(), 4);
 
             recyclerView.setLayoutManager(mLayoutManager);
 
-        }
-
-        else {
+        } else {
 
             LinearLayoutManager mLayoutManager = new LinearLayoutManager(getContext());
 
@@ -71,9 +66,7 @@ public class MainFragment extends Fragment {
         Call<ArrayList<RecipeItem>> recipe = recipeJson.getRecipe();
 
 
-
-        SimpleIdlingResource idlingResource = (SimpleIdlingResource)((RecipeItemActivity)getActivity()).getmIdlingResource();
-
+        SimpleIdlingResource idlingResource = (SimpleIdlingResource) ((RecipeItemActivity) getActivity()).getmIdlingResource();
 
 
         if (idlingResource != null) {
@@ -81,9 +74,6 @@ public class MainFragment extends Fragment {
             idlingResource.setIdleState(false);
 
         }
-
-
-
 
 
         recipe.enqueue(new Callback<ArrayList<RecipeItem>>() {
@@ -97,9 +87,7 @@ public class MainFragment extends Fragment {
                 Log.v("status code: ", statusCode.toString());
 
 
-
                 ArrayList<RecipeItem> recipes = response.body();
-
 
 
                 Bundle recipesBundle = new Bundle();
@@ -107,8 +95,7 @@ public class MainFragment extends Fragment {
                 recipesBundle.putParcelableArrayList(ALL_RECIPES, recipes);
 
 
-
-                recipesAdapter.setRecipeData(recipes,getContext());
+                recipesAdapter.setRecipeData(recipes, getContext());
 
                 if (idlingResource != null) {
 
@@ -117,9 +104,7 @@ public class MainFragment extends Fragment {
                 }
 
 
-
             }
-
 
 
             @Override

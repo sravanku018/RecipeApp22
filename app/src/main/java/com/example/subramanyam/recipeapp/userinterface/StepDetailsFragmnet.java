@@ -19,9 +19,7 @@ import android.widget.Toast;
 import com.example.subramanyam.recipeapp.R;
 import com.example.subramanyam.recipeapp.data.RecipeItem;
 import com.example.subramanyam.recipeapp.data.StepsItems;
-import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.LoadControl;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
@@ -41,7 +39,6 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import static com.example.subramanyam.recipeapp.userinterface.RecipeDescriptionActivity.SELECTED_RECIPES;
 import static com.example.subramanyam.recipeapp.userinterface.RecipeItemActivity.SELECTED_INDEX;
 import static com.example.subramanyam.recipeapp.userinterface.RecipeItemActivity.SELECTED_STEPS;
@@ -53,10 +50,11 @@ public class StepDetailsFragmnet extends Fragment {
     private BandwidthMeter bandwidthMeter;
     private ArrayList<StepsItems> steps = new ArrayList<>();
     private int selectedIndex;
-    private Handler mainHandler;
+ Handler mainHandler;
     ArrayList<RecipeItem> recipe;
     String recipeName;
 
+Uri mediaUri;
 
     public StepDetailsFragmnet()
     {
@@ -170,7 +168,7 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
 
         String imageUrl=steps.get(selectedIndex).getThumbnailURL();
 
-        if (imageUrl!="") {
+        if (!imageUrl.equals("")) {
 
             Uri builtUri = Uri.parse(imageUrl).buildUpon().build();
 
@@ -188,7 +186,8 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
 
 
 
-            initializePlayer(Uri.parse(steps.get(selectedIndex).getVideoURL()));
+            mediaUri=Uri.parse(steps.get(selectedIndex).getVideoURL());
+            initializePlayer(mediaUri);
 
 
 
@@ -296,7 +295,7 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
 
             TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
 
-            LoadControl loadControl = new DefaultLoadControl();
+
 
 
 
@@ -306,7 +305,7 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
 
 
 
-            String userAgent = Util.getUserAgent(getContext(), "Baking App");
+            String userAgent = Util.getUserAgent(getContext(), "RecipeApp");
 
             MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
 
@@ -315,6 +314,8 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
             player.setPlayWhenReady(true);
 
         }
+
+
 
     }
 
@@ -331,6 +332,10 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
         currentState.putInt(SELECTED_INDEX,selectedIndex);
 
         currentState.putString("Title",recipeName);
+
+        player.setPlayWhenReady(!player.getPlayWhenReady());
+
+
 
     }
 
@@ -400,21 +405,9 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
 
 
 
-    @Override
 
-    public void onPause() {
 
-        super.onPause();
 
-        if (player!=null) {
-
-            player.stop();
-
-            player.release();
-
-        }
-
-    }
 
 
 }
