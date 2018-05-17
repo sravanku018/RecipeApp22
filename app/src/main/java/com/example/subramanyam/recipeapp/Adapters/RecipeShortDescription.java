@@ -65,7 +65,7 @@ public class RecipeShortDescription extends RecyclerView.Adapter<RecipeShortDesc
     {
         TextView description;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             description=itemView.findViewById(R.id.shortDescription);
             itemView.setOnClickListener(this);

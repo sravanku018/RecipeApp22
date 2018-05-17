@@ -207,9 +207,10 @@ public class RecipeDescriptionActivity extends AppCompatActivity implements Reci
 
     public void onSaveInstanceState(Bundle outState) {
 
+            outState.putString("Title",recipeName);
+
         super.onSaveInstanceState(outState);
 
-        outState.putString("Title",recipeName);
 
     }
 }

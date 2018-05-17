@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
@@ -22,6 +22,7 @@ import com.example.subramanyam.recipeapp.data.StepsItems;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
+import com.google.android.exoplayer2.extractor.ExtractorsFactory;
 import com.google.android.exoplayer2.source.ExtractorMediaSource;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
@@ -31,6 +32,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.SimpleExoPlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
+import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
@@ -50,18 +52,24 @@ public class StepDetailsFragmnet extends Fragment {
     private BandwidthMeter bandwidthMeter;
     private ArrayList<StepsItems> steps = new ArrayList<>();
     private int selectedIndex;
- Handler mainHandler;
+
     ArrayList<RecipeItem> recipe;
     String recipeName;
+    private long currentPlayerPosition = 0;
 
-Uri mediaUri;
+    Uri mediaUri;
 
-    public StepDetailsFragmnet()
-    {
+    private long mPlaybackPosition;
+
+    private int mCurrentWindow;
+
+    private boolean mPlayWhenReady;
+
+    public StepDetailsFragmnet() {
 
     }
-    private ListItemClickListener itemClickListener;
 
+    private ListItemClickListener itemClickListener;
 
 
     public interface ListItemClickListener {
@@ -71,102 +79,86 @@ Uri mediaUri;
     }
 
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         TextView textView;
 
-        mainHandler = new Handler();
 
         bandwidthMeter = new DefaultBandwidthMeter();
 
 
-
-
-
-itemClickListener=(RecipeDescriptionActivity)getActivity();
-
+        itemClickListener = (RecipeDescriptionActivity) getActivity();
 
 
         recipe = new ArrayList<>();
 
 
+        if (savedInstanceState != null) {
 
-        if(savedInstanceState != null) {
 
             steps = savedInstanceState.getParcelableArrayList(SELECTED_STEPS);
-
             selectedIndex = savedInstanceState.getInt(SELECTED_INDEX);
 
             recipeName = savedInstanceState.getString("Title");
+            currentPlayerPosition = savedInstanceState.getLong("PLAYER_POSITION");
+
+        } else {
 
 
+            steps = getArguments().getParcelableArrayList(SELECTED_STEPS);
 
+            if (steps != null) {
 
+                steps = getArguments().getParcelableArrayList(SELECTED_STEPS);
 
-        }
+                selectedIndex = getArguments().getInt(SELECTED_INDEX);
 
-        else {
+                recipeName = getArguments().getString("Title");
 
-            steps =getArguments().getParcelableArrayList(SELECTED_STEPS);
+            } else {
 
-            if (steps!=null) {
-
-                steps =getArguments().getParcelableArrayList(SELECTED_STEPS);
-
-                selectedIndex=getArguments().getInt(SELECTED_INDEX);
-
-                recipeName=getArguments().getString("Title");
-
-            }
-
-            else {
-
-                recipe =getArguments().getParcelableArrayList(SELECTED_RECIPES);
+                recipe = getArguments().getParcelableArrayList(SELECTED_RECIPES);
 
                 //casting List to ArrayList
 
-                steps=(ArrayList<StepsItems>)recipe.get(0).getSteps();
 
-                selectedIndex=0;
+                steps = (ArrayList<StepsItems>) recipe.get(0).getSteps();
+
+                selectedIndex = 0;
 
             }
 
 
-
         }
-       View view= inflater.inflate(R.layout.fragment_step_details_fragmnet, container, false);
+        View view = inflater.inflate(R.layout.fragment_step_details_fragmnet, container, false);
 
-        textView =  view.findViewById(R.id.recipe_step_detail_text);
+
+        textView = view.findViewById(R.id.recipe_step_detail_text);
 
         textView.setText(steps.get(selectedIndex).getDescription());
 
         textView.setVisibility(View.VISIBLE);
 
 
-
-        simpleExoPlayerView =view.findViewById(R.id.playerView);
+        simpleExoPlayerView = view.findViewById(R.id.playerView);
 
         simpleExoPlayerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
-
 
 
         String videoURL = steps.get(selectedIndex).getVideoURL();
 
 
+        if (view.findViewWithTag("sw600dp-port-recipe_step_detail") != null) {
 
-        if (view.findViewWithTag("sw600dp-port-recipe_step_detail")!=null) {
-
-            recipeName=((RecipeDescriptionActivity) getActivity()).recipeName;
+            recipeName = ((RecipeDescriptionActivity) getActivity()).recipeName;
 
             ((RecipeDescriptionActivity) getActivity()).getSupportActionBar().setTitle(recipeName);
 
         }
 
 
-
-        String imageUrl=steps.get(selectedIndex).getThumbnailURL();
+        String imageUrl = steps.get(selectedIndex).getThumbnailURL();
 
         if (!imageUrl.equals("")) {
 
@@ -179,37 +171,29 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
         }
 
 
-
         if (!videoURL.isEmpty()) {
 
 
-
-
-
-            mediaUri=Uri.parse(steps.get(selectedIndex).getVideoURL());
+            mediaUri = Uri.parse(steps.get(selectedIndex).getVideoURL());
             initializePlayer(mediaUri);
 
 
+            if (view.findViewWithTag("sw600dp-land-recipe_step_detail") != null) {
 
-            if (view.findViewWithTag("sw600dp-land-recipe_step_detail")!=null) {
-
-                getActivity().findViewById(R.id.fragment_container2).setLayoutParams(new LinearLayout.LayoutParams(-1,-2));
+                getActivity().findViewById(R.id.fragment_container2).setLayoutParams(new LinearLayout.LayoutParams(-1, -2));
 
                 simpleExoPlayerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIXED_WIDTH);
 
-            }
+            } else if (isInLandscapeMode(getContext())) {
 
-            else if (isInLandscapeMode(getContext())){
 
                 textView.setVisibility(View.GONE);
 
+
             }
 
-        }
+        } else {
 
-        else {
-
-            player=null;
 
             simpleExoPlayerView.setForeground(ContextCompat.getDrawable(getContext(), R.drawable.ic_launcher_foreground));
 
@@ -218,63 +202,56 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
         }
 
 
-
-
-
         Button mPrevStep = (Button) view.findViewById(R.id.previousStep);
 
         Button mNextstep = (Button) view.findViewById(R.id.nextStep);
-
 
 
         mPrevStep.setOnClickListener(view12 -> {
 
             if (steps.get(selectedIndex).getId() > 0) {
 
-                if (player!=null){
+                if (player != null) {
 
                     player.stop();
 
+
                 }
 
-                itemClickListener.onListItemClick(steps,steps.get(selectedIndex).getId() - 1,recipeName);
+                itemClickListener.onListItemClick(steps, steps.get(selectedIndex).getId() - 1, recipeName);
 
-            }
 
-            else {
+            } else {
 
-                Toast.makeText(getActivity(),"You already are in the First step of the recipe", Toast.LENGTH_SHORT).show();
-
+                Toast.makeText(getActivity(), "You already are in the First step of the recipe", Toast.LENGTH_SHORT).show();
 
 
             }
 
         });
-
 
 
         mNextstep.setOnClickListener(view1 -> {
 
 
-
-            int lastIndex = steps.size()-1;
+            int lastIndex = steps.size() - 1;
 
             if (steps.get(selectedIndex).getId() < steps.get(lastIndex).getId()) {
 
-                if (player!=null){
+                if (player != null) {
 
                     player.stop();
 
+
                 }
 
-                itemClickListener.onListItemClick(steps,steps.get(selectedIndex).getId() + 1,recipeName);
 
-            }
+                itemClickListener.onListItemClick(steps, steps.get(selectedIndex).getId() + 1, recipeName);
 
-            else {
+            } else {
 
-                Toast.makeText(getContext(),"You already are in the Last step of the recipe", Toast.LENGTH_SHORT).show();
 
+                Toast.makeText(getContext(), "You already are in the Last step of the recipe", Toast.LENGTH_SHORT).show();
 
 
             }
@@ -282,132 +259,142 @@ itemClickListener=(RecipeDescriptionActivity)getActivity();
         });
 
 
-
-
         return view;
     }
+
     private void initializePlayer(Uri mediaUri) {
 
-        if (player == null) {
+
+        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+
+        TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
 
 
-            TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+        player = ExoPlayerFactory.newSimpleInstance(getContext(), trackSelector);
 
-            TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
-
-
+        simpleExoPlayerView.setPlayer(player);
 
 
+        DefaultBandwidthMeter bandwidthMeasure = new DefaultBandwidthMeter();
 
-            player = ExoPlayerFactory.newSimpleInstance(getContext(), trackSelector);
+        // Produces DataSource instances through which media data is loaded.
 
-            simpleExoPlayerView.setPlayer(player);
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getContext(),
+
+                Util.getUserAgent(getActivity(), "RecipeApp"), bandwidthMeasure);
+
+        // Produces Extractor instances for parsing the media data.
+
+        ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
 
 
+        MediaSource mediaSource = new ExtractorMediaSource(mediaUri, dataSourceFactory, extractorsFactory, null, null);
 
-            String userAgent = Util.getUserAgent(getContext(), "RecipeApp");
+        player.prepare(mediaSource);
 
-            MediaSource mediaSource = new ExtractorMediaSource(mediaUri, new DefaultDataSourceFactory(getContext(), userAgent), new DefaultExtractorsFactory(), null, null);
 
-            player.prepare(mediaSource);
+        if (currentPlayerPosition != 0)
 
-            player.setPlayWhenReady(true);
+            player.seekTo(currentPlayerPosition);
 
-        }
-
+        player.setPlayWhenReady(true);
 
 
     }
-
 
 
     @Override
 
-    public void onSaveInstanceState(Bundle currentState) {
+    public void onSaveInstanceState(@NonNull Bundle currentState) {
 
+
+        if (player != null) {
+            currentState.putLong("PLAYER_POSITION", player.getCurrentPosition());
+
+            currentState.putInt(SELECTED_INDEX, selectedIndex);
+            currentState.putParcelableArrayList(SELECTED_STEPS, steps);
+            currentState.putString("Title", recipeName);
+
+
+        }
         super.onSaveInstanceState(currentState);
-
-        currentState.putParcelableArrayList(SELECTED_STEPS,steps);
-
-        currentState.putInt(SELECTED_INDEX,selectedIndex);
-
-        currentState.putString("Title",recipeName);
-
-        player.setPlayWhenReady(!player.getPlayWhenReady());
-
-
 
     }
 
 
-
-    public boolean isInLandscapeMode( Context context ) {
+    public boolean isInLandscapeMode(Context context) {
 
         return (context.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
 
     }
 
 
-
     @Override
 
+    public void onResume() {
+
+
+        super.onResume();
+        if(player!=null)
+        {
+            player.setPlayWhenReady(true);
+        }
+
+
+
+    }
+
+
+ /*   @Override
     public void onDetach() {
-
         super.onDetach();
-
-        if (player!=null) {
-
+        if (player != null) {
             player.stop();
-
             player.release();
+        }
+    }*/
 
+    @Override
+    public void onDestroy() {
+
+
+        super.onDestroy();
+        if(player!=null)
+
+        {
+            player.release();
         }
 
     }
 
-
-
     @Override
-
-    public void onDestroyView() {
-
-        super.onDestroyView();
-
-        if (player!=null) {
-
-            player.stop();
-
-            player.release();
-
-            player=null;
-
-        }
-
-    }
-
-
-
-    @Override
-
     public void onStop() {
 
         super.onStop();
 
-        if (player!=null) {
 
-            player.stop();
 
-            player.release();
 
-        }
+
 
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if(player!=null)
+        {
+            player.setPlayWhenReady(false);
+
+        }
 
 
 
 
 
+
+
+    }
 
 
 }
