@@ -50,7 +50,7 @@ public class StepDetailsFragmnet extends Fragment {
     private SimpleExoPlayerView simpleExoPlayerView;
     private SimpleExoPlayer player;
     private BandwidthMeter bandwidthMeter;
-    private ArrayList<StepsItems> steps = new ArrayList<>();
+    ArrayList<StepsItems> steps = new ArrayList<>();
     private int selectedIndex;
 
     ArrayList<RecipeItem> recipe;
@@ -59,11 +59,6 @@ public class StepDetailsFragmnet extends Fragment {
 
     Uri mediaUri;
 
-    private long mPlaybackPosition;
-
-    private int mCurrentWindow;
-
-    private boolean mPlayWhenReady;
 
     public StepDetailsFragmnet() {
 
@@ -103,12 +98,13 @@ public class StepDetailsFragmnet extends Fragment {
             recipeName = savedInstanceState.getString("Title");
             currentPlayerPosition = savedInstanceState.getLong("PLAYER_POSITION");
 
+
         } else {
 
 
             steps = getArguments().getParcelableArrayList(SELECTED_STEPS);
 
-            if (steps != null) {
+            if (steps != null ) {
 
                 steps = getArguments().getParcelableArrayList(SELECTED_STEPS);
 
@@ -306,14 +302,14 @@ public class StepDetailsFragmnet extends Fragment {
     @Override
 
     public void onSaveInstanceState(@NonNull Bundle currentState) {
-
+        currentState.putInt(SELECTED_INDEX, selectedIndex);
+        currentState.putParcelableArrayList(SELECTED_STEPS, steps);
+        currentState.putString("Title", recipeName);
 
         if (player != null) {
             currentState.putLong("PLAYER_POSITION", player.getCurrentPosition());
 
-            currentState.putInt(SELECTED_INDEX, selectedIndex);
-            currentState.putParcelableArrayList(SELECTED_STEPS, steps);
-            currentState.putString("Title", recipeName);
+
 
 
         }
@@ -335,9 +331,12 @@ public class StepDetailsFragmnet extends Fragment {
 
 
         super.onResume();
+
         if(player!=null)
         {
-            player.setPlayWhenReady(true);
+        player.setPlayWhenReady(true);
+
+
         }
 
 
@@ -359,33 +358,26 @@ public class StepDetailsFragmnet extends Fragment {
 
 
         super.onDestroy();
-        if(player!=null)
-
-        {
+        if(player != null){
             player.release();
         }
+
 
     }
 
     @Override
     public void onStop() {
-
         super.onStop();
-
-
-
-
-
-
+        if (player!=null) {
+          player.setPlayWhenReady(false);
+        }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if(player!=null)
-        {
-            player.setPlayWhenReady(false);
-
+        if (player!=null) {
+           player.setPlayWhenReady(false);
         }
 
 
