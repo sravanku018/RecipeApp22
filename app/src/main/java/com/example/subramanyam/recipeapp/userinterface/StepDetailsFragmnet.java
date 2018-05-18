@@ -377,7 +377,7 @@ public class StepDetailsFragmnet extends Fragment {
     public void onPause() {
         super.onPause();
         if (player!=null) {
-           player.setPlayWhenReady(false);
+           player.setPlayWhenReady(true);
         }
 
 
