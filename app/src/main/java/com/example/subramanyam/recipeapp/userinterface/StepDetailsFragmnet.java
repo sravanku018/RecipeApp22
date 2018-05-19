@@ -349,17 +349,14 @@ public class StepDetailsFragmnet extends Fragment {
         }
     }*/
 
+
     @Override
-    public void onDestroy() {
-
-
-        super.onDestroy();
-
+    public void onDetach() {
+        super.onDetach();
         if (player != null) {
+            player.stop();
             player.release();
-
         }
-
 
     }
 
@@ -367,8 +364,8 @@ public class StepDetailsFragmnet extends Fragment {
     public void onStop() {
         super.onStop();
         if (player != null) {
-            player.getPlayWhenReady();
-
+            player.stop();
+            player.release();
         }
     }
 
@@ -376,12 +373,15 @@ public class StepDetailsFragmnet extends Fragment {
     public void onPause() {
         super.onPause();
         if (player != null) {
-            player.setPlayWhenReady(true);
-
+            player.stop();
+            player.release();
         }
-
-
     }
 
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+    }
 }
