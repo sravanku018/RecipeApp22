@@ -104,7 +104,7 @@ public class StepDetailsFragmnet extends Fragment {
 
             steps = getArguments().getParcelableArrayList(SELECTED_STEPS);
 
-            if (steps != null ) {
+            if (steps != null) {
 
                 steps = getArguments().getParcelableArrayList(SELECTED_STEPS);
 
@@ -310,8 +310,6 @@ public class StepDetailsFragmnet extends Fragment {
             currentState.putLong("PLAYER_POSITION", player.getCurrentPosition());
 
 
-
-
         }
         super.onSaveInstanceState(currentState);
 
@@ -332,13 +330,11 @@ public class StepDetailsFragmnet extends Fragment {
 
         super.onResume();
 
-        if(player!=null)
-        {
-        player.setPlayWhenReady(true);
+        if (player != null) {
+            player.setPlayWhenReady(true);
 
 
         }
-
 
 
     }
@@ -358,8 +354,10 @@ public class StepDetailsFragmnet extends Fragment {
 
 
         super.onDestroy();
-        if(player != null){
+
+        if (player != null) {
             player.release();
+
         }
 
 
@@ -368,22 +366,19 @@ public class StepDetailsFragmnet extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
-        if (player!=null) {
-          player.setPlayWhenReady(false);
+        if (player != null) {
+            player.getPlayWhenReady();
+
         }
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        if (player!=null) {
-           player.setPlayWhenReady(true);
+        if (player != null) {
+            player.setPlayWhenReady(true);
+
         }
-
-
-
-
-
 
 
     }
