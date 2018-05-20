@@ -286,14 +286,14 @@ public class StepDetailsFragmnet extends Fragment {
 
         MediaSource mediaSource = new ExtractorMediaSource(mediaUri, dataSourceFactory, extractorsFactory, null, null);
 
-        player.prepare(mediaSource);
 
-
+player.prepare(mediaSource);
         if (currentPlayerPosition != 0)
-
             player.seekTo(currentPlayerPosition);
 
         player.setPlayWhenReady(true);
+
+
 
 
     }
@@ -323,65 +323,45 @@ public class StepDetailsFragmnet extends Fragment {
     }
 
 
-    @Override
 
     public void onResume() {
 
-
         super.onResume();
-
-        if (player != null) {
-            player.setPlayWhenReady(true);
-
-
-        }
-
+releasePlayer();
 
     }
 
+    @Override
+    public void onPause() {
 
- /*   @Override
-    public void onDetach() {
-        super.onDetach();
-        if (player != null) {
-            player.stop();
-            player.release();
-        }
-    }*/
+        super.onPause();
+       releasePlayer();
 
+    }
 
     @Override
-    public void onDetach() {
-        super.onDetach();
-        if (player != null) {
-            player.stop();
+    public void onDestroy() {
+
+        super.onDestroy();
+        if(player != null)
+        {
             player.release();
         }
-
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if (player != null) {
-            player.stop();
-            player.release();
-        }
+
+releasePlayer();
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (player != null) {
-            player.stop();
-            player.release();
+    private void releasePlayer(){
+        if(player != null){
+            player.getPlayWhenReady();
+
+
         }
-    }
-
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
 
     }
 }
