@@ -381,7 +381,7 @@ public class StepDetailsFragmnet extends Fragment {
 
            currentPlayerPosition=player.getCurrentPosition();
 
-           // updateResumePosition();
+         
             player.stop();
             player.release();
 
@@ -393,9 +393,13 @@ public class StepDetailsFragmnet extends Fragment {
 
      public void backgroundState()
      {
-         isPlayerPlaying = player.getPlayWhenReady();
+         if (player != null) {
 
-         player.setPlayWhenReady(false);
+             isPlayerPlaying = player.getPlayWhenReady();
+
+             player.setPlayWhenReady(false);
+
+         }
      }
     public void goToForeground() {
 
