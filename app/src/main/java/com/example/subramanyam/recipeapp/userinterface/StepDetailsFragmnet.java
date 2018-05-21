@@ -73,15 +73,22 @@ public class StepDetailsFragmnet extends Fragment {
     }
 
 
-
     private boolean isPlayerPlaying = true;
     private boolean isVideoPlaying;
 
     private static final String PLAYBACK_POSITION = "playback_position";
 
-    private static final String VIDEO_PLAYSTATE= "video_playstate";
+    private static final String VIDEO_PLAYSTATE = "video_playstate";
 
+    public long getPlaybackPosition() {
+        return playbackPosition;
+    }
 
+    public void setPlaybackPosition(long playbackPosition) {
+        this.playbackPosition = playbackPosition;
+    }
+
+    private long playbackPosition;
 
     public StepDetailsFragmnet() {
 
@@ -120,7 +127,7 @@ public class StepDetailsFragmnet extends Fragment {
 
             recipeName = savedInstanceState.getString("Title");
             currentPlayerPosition = savedInstanceState.getLong("PLAYER_POSITION", C.TIME_UNSET);
-            isVideoPlaying=savedInstanceState.getBoolean(VIDEO_PLAYSTATE,true);
+            isVideoPlaying = savedInstanceState.getBoolean(VIDEO_PLAYSTATE, true);
 
 
         } else {
@@ -283,9 +290,10 @@ public class StepDetailsFragmnet extends Fragment {
     }
 
     private void initializePlayer(Uri mediaUri) {
+        setPlaybackPosition(playbackPosition);
+
         setPlayerPlaying(isVideoPlaying);
-        if (mediaUri != null && simpleExoPlayerView != null && player == null )
-        {
+        if (mediaUri != null && simpleExoPlayerView != null && player == null) {
             TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
 
             TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
@@ -318,13 +326,11 @@ public class StepDetailsFragmnet extends Fragment {
             }
 
             player.prepare(mediaSource, false, false);
-           player.setPlayWhenReady(isPlayerPlaying());
+            player.setPlayWhenReady(isPlayerPlaying());
         }
 
 
-
-
-       goToForeground();
+        goToForeground();
     }
 
 
@@ -337,8 +343,7 @@ public class StepDetailsFragmnet extends Fragment {
 
 
         currentState.putLong("PLAYER_POSITION", currentPlayerPosition);
-        currentState.putBoolean(VIDEO_PLAYSTATE,isPlayerPlaying());
-
+        currentState.putBoolean(VIDEO_PLAYSTATE, isPlayerPlaying());
 
 
         super.onSaveInstanceState(currentState);
@@ -353,15 +358,14 @@ public class StepDetailsFragmnet extends Fragment {
     }
 
 
-
     public void onResume() {
 
         super.onResume();
 
-            {
+        {
 
-                initializePlayer(mediaUri);
-            }
+            initializePlayer(mediaUri);
+        }
 
 
     }
@@ -379,28 +383,27 @@ public class StepDetailsFragmnet extends Fragment {
     private void releasePlayer() {
         if (player != null) {
 
-           currentPlayerPosition=player.getCurrentPosition();
+            currentPlayerPosition = player.getCurrentPosition();
 
-         
+
             player.stop();
             player.release();
-
 
 
         }
         player = null;
     }
 
-     public void backgroundState()
-     {
-         if (player != null) {
+    public void backgroundState() {
+        if (player != null) {
 
-             isPlayerPlaying = player.getPlayWhenReady();
+            isPlayerPlaying = player.getPlayWhenReady();
 
-             player.setPlayWhenReady(false);
+            player.setPlayWhenReady(false);
 
-         }
-     }
+        }
+    }
+
     public void goToForeground() {
 
         if (player != null) {
@@ -410,7 +413,6 @@ public class StepDetailsFragmnet extends Fragment {
         }
 
     }
-
 
 
 }
