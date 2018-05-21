@@ -19,6 +19,7 @@ import android.widget.Toast;
 import com.example.subramanyam.recipeapp.R;
 import com.example.subramanyam.recipeapp.data.RecipeItem;
 import com.example.subramanyam.recipeapp.data.StepsItems;
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory;
@@ -56,8 +57,30 @@ public class StepDetailsFragmnet extends Fragment {
     ArrayList<RecipeItem> recipe;
     String recipeName;
     private long currentPlayerPosition = 0;
+    public final static String PLAYER_POSITION = "currentpostion";
 
+    private int resumeWindow;
+    private long resumePosition;
     Uri mediaUri;
+
+
+    public boolean isPlayerPlaying() {
+        return isPlayerPlaying;
+    }
+
+    public void setPlayerPlaying(boolean playerPlaying) {
+        isPlayerPlaying = playerPlaying;
+    }
+
+
+
+    private boolean isPlayerPlaying = true;
+    private boolean isVideoPlaying;
+
+    private static final String PLAYBACK_POSITION = "playback_position";
+
+    private static final String VIDEO_PLAYSTATE= "video_playstate";
+
 
 
     public StepDetailsFragmnet() {
@@ -96,7 +119,8 @@ public class StepDetailsFragmnet extends Fragment {
             selectedIndex = savedInstanceState.getInt(SELECTED_INDEX);
 
             recipeName = savedInstanceState.getString("Title");
-            currentPlayerPosition = savedInstanceState.getLong("PLAYER_POSITION");
+            currentPlayerPosition = savedInstanceState.getLong("PLAYER_POSITION", C.TIME_UNSET);
+            isVideoPlaying=savedInstanceState.getBoolean(VIDEO_PLAYSTATE,true);
 
 
         } else {
@@ -259,43 +283,48 @@ public class StepDetailsFragmnet extends Fragment {
     }
 
     private void initializePlayer(Uri mediaUri) {
+        setPlayerPlaying(isVideoPlaying);
+        if (mediaUri != null && simpleExoPlayerView != null && player == null )
+        {
+            TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+
+            TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
 
 
-        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+            player = ExoPlayerFactory.newSimpleInstance(getContext(), trackSelector);
 
-        TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
-
-
-        player = ExoPlayerFactory.newSimpleInstance(getContext(), trackSelector);
-
-        simpleExoPlayerView.setPlayer(player);
+            simpleExoPlayerView.setPlayer(player);
 
 
-        DefaultBandwidthMeter bandwidthMeasure = new DefaultBandwidthMeter();
+            DefaultBandwidthMeter bandwidthMeasure = new DefaultBandwidthMeter();
 
-        // Produces DataSource instances through which media data is loaded.
+            // Produces DataSource instances through which media data is loaded.
 
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getContext(),
+            DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getContext(),
 
-                Util.getUserAgent(getActivity(), "RecipeApp"), bandwidthMeasure);
+                    Util.getUserAgent(getActivity(), "RecipeApp"), bandwidthMeasure);
 
-        // Produces Extractor instances for parsing the media data.
+            // Produces Extractor instances for parsing the media data.
 
-        ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
-
-
-        MediaSource mediaSource = new ExtractorMediaSource(mediaUri, dataSourceFactory, extractorsFactory, null, null);
+            ExtractorsFactory extractorsFactory = new DefaultExtractorsFactory();
 
 
-player.prepare(mediaSource);
-        if (currentPlayerPosition != 0)
-            player.seekTo(currentPlayerPosition);
+            MediaSource mediaSource = new ExtractorMediaSource(mediaUri, dataSourceFactory, extractorsFactory, null, null);
 
-        player.setPlayWhenReady(true);
+            boolean haveResumePosition = resumeWindow != C.INDEX_UNSET;
+
+            if (currentPlayerPosition != 0) {
+                player.seekTo(currentPlayerPosition);
+            }
+
+            player.prepare(mediaSource, false, false);
+           player.setPlayWhenReady(isPlayerPlaying());
+        }
 
 
 
 
+       goToForeground();
     }
 
 
@@ -306,11 +335,12 @@ player.prepare(mediaSource);
         currentState.putParcelableArrayList(SELECTED_STEPS, steps);
         currentState.putString("Title", recipeName);
 
-        if (player != null) {
-            currentState.putLong("PLAYER_POSITION", player.getCurrentPosition());
+
+        currentState.putLong("PLAYER_POSITION", currentPlayerPosition);
+        currentState.putBoolean(VIDEO_PLAYSTATE,isPlayerPlaying());
 
 
-        }
+
         super.onSaveInstanceState(currentState);
 
     }
@@ -327,7 +357,12 @@ player.prepare(mediaSource);
     public void onResume() {
 
         super.onResume();
-releasePlayer();
+
+            {
+
+                initializePlayer(mediaUri);
+            }
+
 
     }
 
@@ -335,33 +370,43 @@ releasePlayer();
     public void onPause() {
 
         super.onPause();
-       releasePlayer();
+        backgroundState();
+        releasePlayer();
 
     }
 
-    @Override
-    public void onDestroy() {
 
-        super.onDestroy();
-        if(player != null)
-        {
+    private void releasePlayer() {
+        if (player != null) {
+
+           currentPlayerPosition=player.getCurrentPosition();
+
+           // updateResumePosition();
+            player.stop();
             player.release();
-        }
-    }
 
-    @Override
-    public void onStop() {
-        super.onStop();
-
-releasePlayer();
-    }
-
-    private void releasePlayer(){
-        if(player != null){
-            player.getPlayWhenReady();
 
 
         }
+        player = null;
+    }
+
+     public void backgroundState()
+     {
+         isPlayerPlaying = player.getPlayWhenReady();
+
+         player.setPlayWhenReady(false);
+     }
+    public void goToForeground() {
+
+        if (player != null) {
+
+            player.setPlayWhenReady(isPlayerPlaying);
+
+        }
 
     }
+
+
+
 }
