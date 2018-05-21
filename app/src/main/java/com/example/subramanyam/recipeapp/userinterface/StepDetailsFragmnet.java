@@ -117,10 +117,11 @@ public class StepDetailsFragmnet extends Fragment {
 
 
         recipe = new ArrayList<>();
+        playbackPosition = 0;
+        isVideoPlaying = true;
 
 
         if (savedInstanceState != null) {
-
 
             steps = savedInstanceState.getParcelableArrayList(SELECTED_STEPS);
             selectedIndex = savedInstanceState.getInt(SELECTED_INDEX);
